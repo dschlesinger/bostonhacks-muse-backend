@@ -28,6 +28,8 @@ class ConnectionManager:
 
         self.current_connection = websocket
 
+        await self.ping()
+
     def disconnect(self, websocket: WebSocket) -> None:
         self.current_connection = None
         print('Websocket disconnected')
@@ -71,11 +73,7 @@ async def websocket_endpoint(websocket: WebSocket):
             print(f"Received from client: {message}")
 
             route_frontend_ping(message, manager)
-            
-            # Echo back or handle client messages
-            # For debugging rn
-            await manager.ping()
-            
+
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
@@ -86,7 +84,3 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.get("/")
 async def root():
     return {'message': 'Use the Force, Luke. Let go.'}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

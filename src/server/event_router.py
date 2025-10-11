@@ -3,6 +3,8 @@ import time
 from typing import Dict
 
 def route_frontend_ping(message: Dict, manager: 'ConnectionManager') -> None:
+
+    print(message)
     
     match message['type']:
 
@@ -14,4 +16,4 @@ def route_frontend_ping(message: Dict, manager: 'ConnectionManager') -> None:
         
         case _:
 
-            raise Exception(f'Ping of type {message['type']} is unknown')
+           print(f'Ping of type {message['type']} is unknown')
