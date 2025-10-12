@@ -1,8 +1,9 @@
 import time
+from detector.model import gather_sample, print_data_points
 
 from typing import Dict
 
-def route_frontend_ping(message: Dict, manager: 'ConnectionManager') -> None:
+async def route_frontend_ping(message: Dict, manager: 'ConnectionManager') -> None:
 
     print(message)
     
@@ -10,9 +11,19 @@ def route_frontend_ping(message: Dict, manager: 'ConnectionManager') -> None:
 
         case 'start_artifact_sample':
 
-            time.sleep(5)
+            dp = gather_sample(classification=message['data']['classification'])
 
-            manager.artifact_detected()
+            r = None
+
+            if dp:
+
+                r = dp.anom.data.T.tolist()
+
+            await manager.artifact_detected(r)
+
+        case 'print_data':
+
+            print_data_points()
         
         case _:
 

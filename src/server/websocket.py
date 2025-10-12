@@ -34,7 +34,7 @@ class ConnectionManager:
         self.current_connection = None
         print('Websocket disconnected')
 
-    async def artifact_detected(self) -> None:
+    async def artifact_detected(self, data: List[List[float]]) -> None:
 
         if self.current_connection is None:
             print('Tried to return but no websocket active', 'artifact_detected')
@@ -42,7 +42,7 @@ class ConnectionManager:
 
         await self.current_connection.send_json({
             'type': 'artifact_detected',
-            'data': {},
+            'data': {'eeg_data': data},
         })
 
     async def ping(self) -> None:
@@ -72,7 +72,7 @@ async def websocket_endpoint(websocket: WebSocket):
             message = json.loads(data)
             print(f"Received from client: {message}")
 
-            route_frontend_ping(message, manager)
+            await route_frontend_ping(message, manager)
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
