@@ -66,6 +66,10 @@ def gather_sample(classification: str) -> DataPoint | None:
     
     return found_datapoint
 
+def remove_last_sample() -> None:
+
+    datapoints.pop(-1)
+
 def print_data_points() -> None:
 
     print(len(datapoints))

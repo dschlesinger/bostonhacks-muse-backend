@@ -1,5 +1,5 @@
 import time
-from detector.model import gather_sample, print_data_points
+from detector.model import gather_sample, print_data_points, remove_last_sample
 
 from typing import Dict
 
@@ -24,6 +24,10 @@ async def route_frontend_ping(message: Dict, manager: 'ConnectionManager') -> No
         case 'print_data':
 
             print_data_points()
+        
+        case 'sample_not_good':
+
+            remove_last_sample()
         
         case _:
 

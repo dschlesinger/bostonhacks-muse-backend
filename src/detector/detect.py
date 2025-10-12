@@ -41,6 +41,8 @@ def detect_anamolies(buffer: np.ndarray, timestamps: np.ndarray, events: List, l
 
     now = timestamps[-1].item()
 
+    # Gathering is event based, if a single event then not another one will not
+    # Check current event should be over
     if np.any((mean_val < lower) | (mean_val > upper)): 
 
         # No events
