@@ -21,6 +21,19 @@ class Anomaly(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True, validate_assignment=True)
 
+def end_event(event: Anomaly, buffer: np.ndarray, timestamps: np.ndarray) -> None:
+
+    offset: int = 25
+
+    lower_bound = max(np.searchsorted(timestamps, event.start) - offset, 0)
+    upper_bound = min(np.searchsorted(timestamps, event.end) + offset, buffer.shape[0])
+
+    # Expand buffer
+    event.data = buffer[lower_bound : upper_bound]
+
+    # Update previous to be final
+    event.final = True
+
 def detect_anamolies(buffer: np.ndarray, timestamps: np.ndarray, events: List, lookback: int = 3) -> None:
 
     # kernel: np.ndarray = np.array([*[-1/delta_lookback for i in range(delta_lookback)], 1, *[0 for i in range(delta_lookback)]])
@@ -65,7 +78,7 @@ def detect_anamolies(buffer: np.ndarray, timestamps: np.ndarray, events: List, l
 
             if events[-1].data.shape[0] > Settings.BUFFER_LENGTH // 2:
 
-                events[-1].final = True
+                end_event(events[-1], buffer, timestamps)
 
         else:
             # Cannot merge event make new one
@@ -75,16 +88,7 @@ def detect_anamolies(buffer: np.ndarray, timestamps: np.ndarray, events: List, l
                 events.pop()
             else:
 
-                offset: int = 25
-
-                lower_bound = max(np.searchsorted(timestamps, events[-1].start) - offset, 0)
-                upper_bound = min(np.searchsorted(timestamps, events[-1].end) + offset, buffer.shape[0])
-
-                # Expand buffer
-                events[-1].data = buffer[lower_bound : upper_bound]
-
-                # Update previous to be final
-                events[-1].final = True
+                end_event(events[-1], buffer, timestamps)
 
             events.append(
                 Anomaly(
@@ -93,3 +97,8 @@ def detect_anamolies(buffer: np.ndarray, timestamps: np.ndarray, events: List, l
                     data=buffer[-1],
                 )
             )
+
+    # Remove stale events
+    elif events and not events[-1].final and now - events[-1].end < Settings.EVENT_MERGE_TIME:
+
+        end_event(events[-1], buffer, timestamps)
