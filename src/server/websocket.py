@@ -1,10 +1,13 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-import json
-import asyncio
-from typing import List
+import json, time, threading
+from typing import List, Generator
 
 from .event_router import route_frontend_ping
+from main.utils.status import status_manager
+
+lock = threading.Lock()
 
 app = FastAPI()
 
@@ -17,8 +20,9 @@ app.add_middleware(
 )
 
 class ConnectionManager:
-    def __init__(self) -> None:
+    def __init__(self, test: bool = False) -> None:
         self.current_connection: WebSocket | None = None
+        self.test = test
 
     async def connect(self, websocket: WebSocket) -> None:
         await websocket.accept()
@@ -57,6 +61,27 @@ class ConnectionManager:
         })
 
 manager = ConnectionManager()
+
+@app.get('/status-updates')
+async def status_update() -> StreamingResponse:
+    
+    def status_generator() -> Generator[str, None, None]:
+        
+        last_value: str = 'not connected'
+        
+        yield f"data: {json.dumps({'status': last_value})}\n\n"
+        
+        while True:
+            
+            with lock:
+                if last_value != status_manager.status:
+                    last_value = status_manager.status
+                    # Format for SSE
+                    yield f"data: {json.dumps({'status': last_value})}\n\n"
+                
+            time.sleep(0.1)
+
+    return StreamingResponse(status_generator(), media_type="text/event-stream")
 
 @app.websocket("/event_manager")
 async def websocket_endpoint(websocket: WebSocket):

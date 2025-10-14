@@ -4,7 +4,8 @@ match test_to_run:
 
     case 'websocket':
         import uvicorn
-        from server.websocket import app
+        from server.websocket import app, manager
+        manager.test = True
         uvicorn.run(app, host="0.0.0.0", port=8000)
 
     case 'eeg':

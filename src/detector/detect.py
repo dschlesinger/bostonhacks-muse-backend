@@ -3,7 +3,7 @@ import numpy as np, matplotlib.pyplot as plt
 from itertools import repeat
 from typing import List
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_serializer
 
 from main.config import Settings
 
@@ -20,6 +20,10 @@ class Anomaly(BaseModel):
     final: bool = False
 
     model_config = ConfigDict(arbitrary_types_allowed=True, validate_assignment=True)
+    
+    @field_serializer('data')
+    def serialize_data(self, value: np.ndarray) -> list:
+        return value.tolist()
 
 def end_event(event: Anomaly, buffer: np.ndarray, timestamps: np.ndarray) -> None:
 
@@ -46,7 +50,7 @@ def detect_anamolies(buffer: np.ndarray, timestamps: np.ndarray, events: List, l
     s = buffer.std(axis=0)
     v = Settings.EVENT_STD
 
-    ca = channel_allowances = np.array([50.0, 50.0, 50.0, 50.0])
+    ca = channel_allowances = np.array([50.0])
 
     mean_val = buffer[-lookback:].mean(axis=0)
     lower = np.minimum(m - v * s, m - ca)
@@ -99,6 +103,6 @@ def detect_anamolies(buffer: np.ndarray, timestamps: np.ndarray, events: List, l
             )
 
     # Remove stale events
-    elif events and not events[-1].final and now - events[-1].end < Settings.EVENT_MERGE_TIME:
+    elif events and not events[-1].final and now - events[-1].end > Settings.EVENT_MERGE_TIME:
 
         end_event(events[-1], buffer, timestamps)

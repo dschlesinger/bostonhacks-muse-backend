@@ -1,4 +1,4 @@
-import threading, time, matplotlib.pyplot as plt, math
+import threading, time, matplotlib.pyplot as plt, json
 
 from pydantic import BaseModel
 from detector.detect import Anomaly
@@ -67,9 +67,22 @@ def gather_sample(classification: str) -> DataPoint | None:
     return found_datapoint
 
 def remove_last_sample() -> None:
+    
+    if datapoints:
 
-    datapoints.pop(-1)
-
+        datapoints.pop(-1)
+        
+def reset_datapoints() -> None:
+    global datapoints
+    
+    datapoints = []
+    
+def save_data(name: str) -> None:
+    
+    with open(f'data_store/{name}.json', 'w') as f:
+        
+        f.write(json.dumps(datapoints))
+        
 def print_data_points() -> None:
 
     print(len(datapoints))

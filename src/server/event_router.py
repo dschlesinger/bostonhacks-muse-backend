@@ -1,5 +1,6 @@
 import time
 from detector.model import gather_sample, print_data_points, remove_last_sample
+from detector import muse
 
 from typing import Dict
 
@@ -11,15 +12,21 @@ async def route_frontend_ping(message: Dict, manager: 'ConnectionManager') -> No
 
         case 'start_artifact_sample':
 
-            dp = gather_sample(classification=message['data']['classification'])
+            if not manager.test:
+                
+                dp = gather_sample(classification=message['data']['classification'])
 
-            r = None
+                if dp:
 
-            if dp:
+                    artifact_data = dp.anom.data.T.tolist()
+                    
+                    print('sending sensors', muse.sensors)
 
-                r = dp.anom.data.T.tolist()
+                    await manager.artifact_detected([{'sensor': s, 'data': r} for s, r in zip(muse.sensors, artifact_data)]) 
+                
+            else:
 
-            await manager.artifact_detected(r)
+                await manager.artifact_detected([{'sensor': s, 'data': r} for s, r in zip(['A', 'B', 'C', 'D'], [[1, 2], [1, 2], [1, 2], [1, 2]])]) 
 
         case 'print_data':
 
