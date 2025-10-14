@@ -1,8 +1,10 @@
 import threading, time, matplotlib.pyplot as plt, json
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_serializer
 from detector.detect import Anomaly
 from detector.muse import events
+
+from typing import Dict
 
 lock = threading.Lock()
 
@@ -10,6 +12,14 @@ class DataPoint(BaseModel):
 
     classification: str | None
     anom: Anomaly
+    
+    @model_serializer(mode='plain')
+    def model_ser(self) -> Dict:
+        return {
+            'anom': json.loads(self.anom.model_dump_json()),
+            'classification': self.classification,
+        }   
+        
 
 datapoints = []
 
@@ -80,8 +90,8 @@ def reset_datapoints() -> None:
 def save_data(name: str) -> None:
     
     with open(f'data_store/{name}.json', 'w') as f:
-        
-        f.write(json.dumps(datapoints))
+    
+        f.write(json.dumps([json.loads(di.model_dump_json()) for di in datapoints]))
         
 def print_data_points() -> None:
 

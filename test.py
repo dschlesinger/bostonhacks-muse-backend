@@ -53,6 +53,28 @@ match test_to_run:
             ax.plot(timestamps[Settings.BUFFER_LENGTH:], buffer[Settings.BUFFER_LENGTH:, i])
 
         plt.savefig('deltas.png')
+        
+    case 'dp-ser':
+        from detector.detect import Anomaly
+        from detector.model import DataPoint
+        import numpy as np, json
+        
+        a = Anomaly(
+            start=0,
+            end=0,
+            data=np.array([0, 0, 0])
+        )
+        
+        d = DataPoint(
+            classification='blah',
+            anom=a
+        )
+        
+        print(d.model_dump_json())
+        
+        with open(f'data_store/example.json', 'w') as f:
+        
+            f.write(json.dumps([json.loads(di.model_dump_json()) for di in [d, d]]))
 
     case _:
         raise Exception(f'{test_to_run} is not an option')

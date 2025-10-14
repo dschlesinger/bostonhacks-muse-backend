@@ -1,0 +1,10 @@
+[
+  {
+    "anom": { "start": 0.0, "end": 0.0, "final": false, "data": [0, 0, 0] },
+    "classification": "blah"
+  },
+  {
+    "anom": { "start": 0.0, "end": 0.0, "final": false, "data": [0, 0, 0] },
+    "classification": "blah"
+  }
+]

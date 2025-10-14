@@ -1,9 +1,9 @@
 import numpy as np, matplotlib.pyplot as plt
 
 from itertools import repeat
-from typing import List
+from typing import List, Dict
 
-from pydantic import BaseModel, ConfigDict, field_serializer
+from pydantic import BaseModel, ConfigDict, model_serializer
 
 from main.config import Settings
 
@@ -21,9 +21,15 @@ class Anomaly(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True, validate_assignment=True)
     
-    @field_serializer('data')
-    def serialize_data(self, value: np.ndarray) -> list:
-        return value.tolist()
+    @model_serializer(mode='plain')
+    def model_ser(self) -> Dict:
+        return {
+            'start': self.start,
+            'end': self.end,
+            'final': self.final,
+            'data': self.data.tolist()
+        }
+        
 
 def end_event(event: Anomaly, buffer: np.ndarray, timestamps: np.ndarray) -> None:
 
