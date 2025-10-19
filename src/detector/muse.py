@@ -15,6 +15,9 @@ timestamp_buffer = None
 events = []
 sensors = None
 
+class CurrentState:
+    keybinds_on: bool = True
+
 # Lock for threading safely
 lock = threading.Lock()
 
@@ -88,8 +91,8 @@ def connect_to_eeg() -> Union['inlet', None]:
     except Exception as e:
         with lock: status_manager.set_status(stream_started=False)
         return None
-
-def eeg_loop(num_samples_to_buffer: int = Settings.BUFFER_LENGTH) -> None:
+    
+def eeg_loop(num_samples_to_buffer: int = Settings.BUFFER_LENGTH, current_mode: CurrentState = CurrentState()) -> None:
     global buffer, timestamp_buffer, events, sensors
 
     total_number_off_sample: int = 0
@@ -155,6 +158,17 @@ def eeg_loop(num_samples_to_buffer: int = Settings.BUFFER_LENGTH) -> None:
                 with lock:
 
                     detect_anamolies(buffer, timestamp_buffer, events)
+
+                if current_mode.keybinds_on:
+                    
+                    # To avoid circular import, should redo this at somepoint very wack
+                    from detector.model import check_for_emission, model, Model
+                    
+                    model = Model()
+                    
+                    model.load_data('data_store/examples.json')
+                    
+                    check_for_emission(model)
 
         except KeyboardInterrupt:
             pass

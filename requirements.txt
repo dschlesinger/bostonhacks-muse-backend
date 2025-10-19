@@ -3,3 +3,5 @@ uvicorn
 websockets
 muselsl
 pydantic
+scikit-learn
+dtaidistance
